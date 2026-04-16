@@ -3,27 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NutriScan</title>
+<title>NutriScan Apex</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #2a2a3a;
-    --accent: #c8f55a;
-    --accent2: #7c6af5;
-    --text: #f0f0f5;
-    --muted: #8b8b99;
-    --protein: #c8f55a;
-    --carbs: #f5a55a;
-    --fat: #f55a8a;
-    --cal: #5ac8f5;
-    --gold: #FFD700;
-    --red: #FF4136;
+    --bg: #0a0a0f; --surface: #111118; --surface2: #1a1a24; --border: #2a2a3a;
+    --accent: #c8f55a; --accent2: #7c6af5; --text: #f0f0f5; --muted: #8b8b99;
+    --protein: #c8f55a; --carbs: #f5a55a; --fat: #f55a8a; --cal: #5ac8f5;
+    --gold: #FFD700; --red: #FF4136;
   }
 
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 0 80px; }
@@ -39,11 +29,11 @@
   .container { width: 100%; max-width: 480px; padding: 0 16px; display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
 
   /* AI Tip Assistant */
-  .ai-tip { background: rgba(124, 106, 245, 0.1); border: 1px solid var(--accent2); border-radius: 16px; padding: 16px; display: flex; gap: 12px; align-items: center; font-size: 0.85rem; display: none; line-height: 1.5; }
+  .ai-tip { background: rgba(124, 106, 245, 0.1); border: 1px solid var(--accent2); border-radius: 16px; padding: 16px; display: flex; gap: 12px; align-items: center; font-size: 0.85rem; line-height: 1.5; }
   .ai-tip span { font-size: 1.4rem; flex-shrink: 0; }
 
   /* Daily totals */
-  .daily-totals { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+  .daily-totals { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; position: relative; }
   .totals-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 16px; font-family: 'Syne', sans-serif; display: flex; justify-content: space-between; align-items: center; }
   .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .total-item { text-align: center; }
@@ -61,15 +51,10 @@
 
   .progress-bar.gold { background: var(--gold) !important; box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
   .total-value.gold { color: var(--gold) !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
-  .progress-bar.over { background: var(--red) !important; box-shadow: 0 0 8px rgba(255, 65, 54, 0.5); }
-  .total-value.over { color: var(--red) !important; }
-
-  /* Macro Split Bar */
-  .macro-split-wrapper { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
-  .macro-split-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; font-weight: 600; display: flex; justify-content: space-between; }
-  .macro-split-bar { display: flex; width: 100%; height: 6px; border-radius: 3px; overflow: hidden; background: var(--surface2); }
-  .split-segment { height: 100%; transition: width 0.4s ease; }
-  .split-segment.p { background: var(--protein); } .split-segment.c { background: var(--carbs); } .split-segment.f { background: var(--fat); }
+  .progress-bar.red { background: var(--red) !important; }
+  .total-value.red { color: var(--red) !important; }
+  
+  .macro-split { text-align: center; font-size: 0.65rem; color: var(--muted); margin-top: 16px; font-family: 'Syne', sans-serif; letter-spacing: 0.05em; text-transform: uppercase; }
 
   /* Premium Health Dashboard Layout */
   .health-dash { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: none; flex-direction: column; gap: 20px; }
@@ -108,17 +93,20 @@
   #scanner-container.active { display: block; }
   #scanner-container video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .scanner-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-  .scan-frame { width: 240px; height: 140px; position: relative; transition: border-color 0.2s; }
-  .scan-frame.pulse { border-color: var(--accent) !important; box-shadow: 0 0 20px rgba(200, 245, 90, 0.5); }
-  .scan-frame::before, .scan-frame::after, .scan-frame > span::before, .scan-frame > span::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: inherit; border-style: solid; border-radius: 4px; transition: border-color 0.2s; }
+  .scan-frame { width: 240px; height: 140px; position: relative; transition: border-color 0.3s; }
+  .scan-frame.pulse { filter: drop-shadow(0 0 8px rgba(200, 245, 90, 0.8)); }
+  .scan-frame::before, .scan-frame::after, .scan-frame > span::before, .scan-frame > span::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: var(--accent); border-style: solid; border-radius: 4px; transition: border-color 0.2s; }
+  .scan-frame.pulse::before, .scan-frame.pulse::after, .scan-frame.pulse > span::before, .scan-frame.pulse > span::after { border-color: #fff; }
   .scan-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
   .scan-frame::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
   .scan-frame > span::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
   .scan-frame > span::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
   .scan-line { position: absolute; left: 10px; right: 10px; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanline 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; top: 50%; box-shadow: 0 0 8px var(--accent); }
   @keyframes scanline { 0%, 100% { transform: translateY(-50px); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 50% { transform: translateY(50px); } }
-  .stop-btn { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(10,10,15,0.85); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; padding: 10px 24px; border-radius: 30px; cursor: pointer; pointer-events: all; backdrop-filter: blur(4px); }
-  .torch-btn { position: absolute; bottom: 16px; right: 16px; background: rgba(10,10,15,0.85); border: 1px solid var(--border); color: var(--text); font-size: 1.2rem; padding: 8px 12px; border-radius: 50%; cursor: pointer; pointer-events: all; }
+  
+  .scanner-controls { position: absolute; bottom: 16px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; pointer-events: none; }
+  .scanner-btn { background: rgba(10,10,15,0.85); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; padding: 10px 24px; border-radius: 30px; cursor: pointer; pointer-events: all; backdrop-filter: blur(4px); display: flex; align-items: center; gap: 6px; }
+  .scanner-btn:active { background: var(--surface2); }
 
   /* Inputs (Manual & AI) */
   .divider { text-align: center; color: var(--muted); font-size: 0.75rem; position: relative; margin: 4px 0; }
@@ -251,15 +239,7 @@
         <div class="goal-text" id="goal-fat-txt"></div>
       </div>
     </div>
-    
-    <div class="macro-split-wrapper" id="macro-split-wrap">
-      <div class="macro-split-label"><span>Macro Split</span> <span id="macro-split-text">0% / 0% / 0%</span></div>
-      <div class="macro-split-bar">
-        <div class="split-segment split-segment.p" id="split-p"></div>
-        <div class="split-segment split-segment.c" id="split-c"></div>
-        <div class="split-segment split-segment.f" id="split-f"></div>
-      </div>
-    </div>
+    <div class="macro-split" id="macro-split-text">0% Carbs · 0% Protein · 0% Fat</div>
   </div>
 
   <div class="health-dash" id="health-dash">
@@ -286,8 +266,20 @@
     <button class="reset-btn" onclick="resetDay()">End & Reset Day</button>
   </div>
 
-  <div class="quick-add-grid" id="quick-adds-container">
+  <div class="quick-add-grid">
+    <div class="quick-btn" onclick="logAIItem('coffee')">
+      <span class="quick-icon">☕</span><span class="quick-label">Coffee</span>
     </div>
+    <div class="quick-btn" onclick="logAIItem('banana')">
+      <span class="quick-icon">🍌</span><span class="quick-label">Fruit</span>
+    </div>
+    <div class="quick-btn" onclick="logAIItem('protein shake')">
+      <span class="quick-icon">🥤</span><span class="quick-label">Shake</span>
+    </div>
+    <div class="quick-btn" onclick="toggleWater(waterCount + 1)">
+      <span class="quick-icon">💧</span><span class="quick-label">Water</span>
+    </div>
+  </div>
 
   <button class="scan-btn" id="scan-btn" onclick="startScanner()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -301,14 +293,16 @@
     <div class="scanner-overlay">
       <div class="scan-frame" id="scan-frame"><span></span><div class="scan-line"></div></div>
     </div>
-    <button class="torch-btn" onclick="toggleTorch()">🔦</button>
-    <button class="stop-btn" onclick="stopScanner()">✕ Cancel</button>
+    <div class="scanner-controls">
+      <button class="scanner-btn" onclick="toggleTorch()">🔦 Torch</button>
+      <button class="scanner-btn" onclick="stopScanner()">✕ Cancel</button>
+    </div>
   </div>
 
   <div class="divider">or describe your food</div>
 
   <div class="input-row">
-    <input type="text" class="flex-input" id="ai-input" placeholder="e.g. 2 eggs with a little honey" />
+    <input type="text" class="flex-input" id="ai-input" placeholder="e.g. 2 eggs and a little honey" />
     <button class="flex-btn" onclick="parseAIFood()">Look up</button>
   </div>
 
@@ -319,8 +313,7 @@
     <button class="flex-btn" onclick="lookupManual()">Search</button>
   </div>
 
-  <div class="recent-scans-wrapper" id="recent-scans-container">
-  </div>
+  <div class="recent-scans-wrapper" id="recent-scans-container"></div>
 
   <div class="status" id="status"></div>
 
@@ -339,7 +332,7 @@
     
     <div class="multiplier-section">
       <label>Number of servings:</label>
-      <input type="number" id="serving-multiplier" class="multiplier-input" value="1" step="0.5" min="0.1">
+      <input type="number" id="serving-multiplier" class="multiplier-input" value="1" step="0.25" min="0.1">
     </div>
 
     <button class="add-btn" onclick="addToLog()">
@@ -359,10 +352,10 @@
   <div class="modal-content">
     <div class="modal-title">Your Metrics</div>
     <div class="form-group"><label>Sex</label><select id="p-sex"><option value="male">Male</option><option value="female">Female</option></select></div>
-    <div class="form-group"><label>Age</label><input type="number" id="p-age" placeholder="Years"></div>
-    <div class="form-group"><label>Current Weight (kg)</label><input type="number" id="p-weight" placeholder="e.g. 80"></div>
-    <div class="form-group"><label>Ideal Weight (kg)</label><input type="number" id="p-target" placeholder="e.g. 70"></div>
-    <div class="form-group"><label>Height (cm)</label><input type="number" id="p-height" placeholder="e.g. 175"></div>
+    <div class="form-group"><label>Age</label><input type="number" id="p-age" placeholder="Years" value="25"></div>
+    <div class="form-group"><label>Current Weight (kg)</label><input type="number" id="p-weight" placeholder="e.g. 80" value="80"></div>
+    <div class="form-group"><label>Ideal Weight (kg)</label><input type="number" id="p-target" placeholder="e.g. 70" value="75"></div>
+    <div class="form-group"><label>Height (cm)</label><input type="number" id="p-height" placeholder="e.g. 175" value="175"></div>
     <div class="form-group"><label>Activity Level</label><select id="p-activity"><option value="1.2">Sedentary (Office job)</option><option value="1.375">Lightly Active (1-3 days/wk)</option><option value="1.55">Moderately Active (3-5 days/wk)</option><option value="1.725">Very Active (6-7 days/wk)</option></select></div>
     <button class="save-btn" onclick="saveProfile()">Save & Initialize AI</button>
     <button class="close-modal-btn" onclick="toggleProfile()">Cancel</button>
@@ -370,42 +363,38 @@
 </div>
 
 <script>
-  // Safe Storage Wrapper to prevent private browsing crashes
-  function safeSet(key, value) { try { localStorage.setItem(key, value); } catch(e) { console.warn('Storage error'); } }
-  function safeGet(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch(e) { return fallback; } }
-
-  // Core Configuration & Quick Adds (Editable)
-  const QUICK_ADDS = [
-    { name: "Coffee", icon: "☕" },
-    { name: "Banana", icon: "🍌" },
-    { name: "Protein Shake", icon: "🥤" },
-    { name: "Water", icon: "💧", action: "toggleWater" }
-  ];
-
   // Core State
   let currentProduct = null;
-  let log = JSON.parse(safeGet('nutriscan-log', '[]'));
-  let goals = JSON.parse(safeGet('nutriscan-goals', 'null'));
-  
-  // Cache, Water, Streak, Haptics
-  let productCache = JSON.parse(safeGet('nutriscan-cache', '{}'));
-  let waterCount = parseInt(safeGet('nutriscan-water', '0'));
-  let streak = parseInt(safeGet('nutriscan-streak', '0'));
+  let log = [];
+  let goals = null;
+  let productCache = {};
+  let waterCount = 0;
+  let streak = 0;
   let goldVibrated = false; 
-  
-  // Scanner Engine State
   let scannerActive = false;
-  let scanVotes = {};
-  let isTorchOn = false;
+  let torchActive = false;
+  let scanVotes = {}; // Confidence map for barcode scanner
 
-  // The Upgraded Multi-Ingredient & UK Staples DB (Brand First)
+  // Safe Initialization
+  try {
+    log = JSON.parse(localStorage.getItem('nutriscan-log') || '[]');
+    goals = JSON.parse(localStorage.getItem('nutriscan-goals') || 'null');
+    productCache = JSON.parse(localStorage.getItem('nutriscan-cache') || '{}');
+    waterCount = parseInt(localStorage.getItem('nutriscan-water') || '0');
+    streak = parseInt(localStorage.getItem('nutriscan-streak') || '0');
+  } catch (e) {
+    console.error("Storage blocked or corrupted", e);
+  }
+
+  // UK Staples & Greggs Database Priority
   const offlineFoodDB = {
     "greggs sausage roll": { cal: 329, p: 9.4, c: 24, f: 22 },
-    "greggs vegan sausage roll": { cal: 308, p: 9.3, c: 20, f: 19 },
-    "greggs steak bake": { cal: 408, p: 11.5, c: 31, f: 26 },
+    "greggs vegan sausage roll": { cal: 309, p: 9.5, c: 22, f: 19 },
     "greggs pizza": { cal: 550, p: 22, c: 60, f: 24 },
-    "meal deal chicken": { cal: 410, p: 21, c: 45, f: 14 }, // Generic UK Meal Deal Sandwiches
-    "meal deal blt": { cal: 480, p: 18, c: 40, f: 25 },
+    "greggs steak bake": { cal: 408, p: 12.5, c: 30, f: 26 },
+    "sausage roll": { cal: 320, p: 9, c: 24, f: 22 }, // Fallback
+    "meal deal chicken": { cal: 380, p: 20, c: 45, f: 12 },
+    "meal deal blt": { cal: 420, p: 15, c: 42, f: 20 },
     "egg": { cal: 72, p: 6, c: 0.6, f: 5 },
     "eggs": { cal: 72, p: 6, c: 0.6, f: 5 },
     "banana": { cal: 105, p: 1.3, c: 27, f: 0.3 },
@@ -426,35 +415,25 @@
     "oil": { cal: 119, p: 0, c: 0, f: 13.5 }
   };
 
-  // AI Modifiers Dictionary
-  const aiModifiers = { "dash": 0.25, "little": 0.5, "bit": 0.5, "small": 0.5, "half": 0.5, "large": 1.5, "double": 2.0, "huge": 2.0 };
-
-  // Init Date logic
   const todayStr = new Date().toDateString();
-  const lastDate = safeGet('nutriscan-date', '');
+  const lastDate = localStorage.getItem('nutriscan-date');
   document.getElementById('date-badge').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 
   if (lastDate !== todayStr) {
     if (goals && log.length > 0) {
       const yTotal = log.reduce((acc, item) => acc + item.cal, 0);
       const pct = yTotal / goals.cal;
-      if (pct >= 0.90 && pct <= 1.05) { streak += 1; safeSet('nutriscan-streak', streak); }
+      if (pct >= 0.90 && pct <= 1.05) { streak += 1; localStorage.setItem('nutriscan-streak', streak); }
     }
     log = []; waterCount = 0; goldVibrated = false;
-    safeSet('nutriscan-log', JSON.stringify(log));
-    safeSet('nutriscan-water', '0');
-    safeSet('nutriscan-date', todayStr);
+    localStorage.setItem('nutriscan-log', JSON.stringify(log));
+    localStorage.setItem('nutriscan-water', '0');
+    localStorage.setItem('nutriscan-date', todayStr);
   }
 
-  function initQuickAdds() {
-    const container = document.getElementById('quick-adds-container');
-    container.innerHTML = QUICK_ADDS.map(qa => {
-      const action = qa.action === 'toggleWater' ? `toggleWater(waterCount + 1)` : `logAIItem('${qa.name}')`;
-      return `<div class="quick-btn" onclick="${action}"><span class="quick-icon">${qa.icon}</span><span class="quick-label">${qa.name}</span></div>`;
-    }).join('');
+  function toggleProfile() { 
+    document.getElementById('profile-modal').classList.toggle('active'); 
   }
-
-  function toggleProfile() { document.getElementById('profile-modal').classList.toggle('active'); }
 
   function saveProfile() {
     const sex = document.getElementById('p-sex').value;
@@ -475,8 +454,9 @@
     let weeksToGoal = adjustment !== 0 ? Math.round((Math.abs(weight - target) * 7700) / (Math.abs(adjustment) * 7)) : 0;
 
     goals = { startWeight: weight, targetWeight: target, eta: weeksToGoal, cal: Math.round(tdee), protein: Math.round((tdee * 0.30) / 4), carbs: Math.round((tdee * 0.40) / 4), fat: Math.round((tdee * 0.30) / 9) };
-    safeSet('nutriscan-goals', JSON.stringify(goals));
-    toggleProfile(); calculateAndRender();
+    localStorage.setItem('nutriscan-goals', JSON.stringify(goals));
+    toggleProfile(); 
+    updateUI();
   }
 
   function renderWater() {
@@ -489,14 +469,21 @@
   function toggleWater(val) {
     if (val > 8) return;
     waterCount = (waterCount === val) ? val - 1 : val; 
-    safeSet('nutriscan-water', waterCount);
-    if(navigator.vibrate) navigator.vibrate(20);
-    renderWater(); calculateAndRender(); 
+    localStorage.setItem('nutriscan-water', waterCount);
+    if(navigator.vibrate) navigator.vibrate(50);
+    renderWater(); updateUI(); 
+  }
+
+  function saveCache(cacheObj) {
+    // LRU Implementation: Limit to 20 items to prevent bloat
+    const keys = Object.keys(cacheObj);
+    if (keys.length > 20) { delete cacheObj[keys[0]]; }
+    localStorage.setItem('nutriscan-cache', JSON.stringify(cacheObj));
   }
 
   function renderRecentScans() {
     const container = document.getElementById('recent-scans-container');
-    const keys = Object.keys(productCache).slice(-3).reverse();
+    const keys = Object.keys(productCache).slice(-6).reverse(); // Show last 6
     if (keys.length === 0) { container.innerHTML = ''; return; }
     
     container.innerHTML = `
@@ -514,68 +501,50 @@
   }
   function hideStatus() { document.getElementById('status').className = 'status'; }
 
-  // The "Chef" AI Parser (With brand strip & modifiers)
+  // Upgraded AI Splitter with Modifiers
   function parseAIFood() {
     const input = document.getElementById('ai-input').value.toLowerCase().trim();
     if (!input) return;
     
     document.getElementById('result-card').classList.remove('active');
     
-    // Filter out common joiners
-    const parts = input.split(/ and | \+ | with |, | , /).filter(p => p.trim() !== "");
+    // Split by common dividers
+    const parts = input.split(/ and | \+ | with | , |, /);
     let total = { cal: 0, p: 0, c: 0, f: 0, names: [] };
 
-    // Sort DB keys by length descending (Brand first: "Greggs Pizza" checks before "Pizza")
-    const dbKeys = Object.keys(offlineFoodDB).sort((a,b) => b.length - a.length);
-
     parts.forEach(part => {
-      let partTrimmed = part.trim();
       let qty = 1;
       
-      // Check for numeric multiplier (e.g., "2 eggs")
-      const words = partTrimmed.split(' ');
-      if (words.length > 0 && words[0].match(/\d+/)) {
-        qty = parseFloat(words[0]);
-      } else {
-        // Check text modifiers (e.g., "a little honey")
-        for (const mod in aiModifiers) {
-          if (partTrimmed.includes(mod)) {
-             qty = aiModifiers[mod];
-             break;
-          }
-        }
+      // Smart Multipliers
+      if (part.includes("little") || part.includes("dash") || part.includes("splash")) qty = 0.25;
+      else if (part.includes("bit") || part.includes("small") || part.includes("half")) qty = 0.5;
+      else if (part.includes("large") || part.includes("double") || part.includes("huge")) qty = 1.5;
+      else {
+        const words = part.trim().split(' ');
+        if (words.length > 0 && words[0].match(/\d+/)) qty = parseFloat(words[0]);
       }
 
       let foundKey = null;
-      for (const key of dbKeys) {
-        if (partTrimmed.includes(key)) {
-          foundKey = key;
-          break; // Stop at longest match
+      for (const key in offlineFoodDB) {
+        if (part.includes(key)) {
+          if (!foundKey || key.length > foundKey.length) {
+            foundKey = key; // Prioritizes longer matches (e.g., "greggs pizza" over "pizza")
+          }
         }
       }
-
-      // Smart Fallback (Strip unknown brands: "Tesco Meal Deal Chicken" -> "Meal Deal Chicken")
-      if (!foundKey && partTrimmed.includes("meal deal")) foundKey = "meal deal chicken";
 
       if (foundKey) {
         total.cal += offlineFoodDB[foundKey].cal * qty;
         total.p += offlineFoodDB[foundKey].p * qty;
         total.c += offlineFoodDB[foundKey].c * qty;
         total.f += offlineFoodDB[foundKey].f * qty;
-        
-        let formattedName = foundKey.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        if (qty === 0.25) formattedName = `A dash of ${formattedName}`;
-        else if (qty === 0.5) formattedName = `A little ${formattedName}`;
-        else if (qty > 1 && !partTrimmed.includes(qty.toString())) formattedName = `Large ${formattedName}`;
-        else if (qty !== 1) formattedName = `${qty}x ${formattedName}`;
-
-        total.names.push(formattedName);
+        const formattedName = foundKey.charAt(0).toUpperCase() + foundKey.slice(1);
+        total.names.push(qty !== 1 ? `${qty}x ${formattedName}` : formattedName);
       }
     });
 
     if (total.names.length > 0) {
       showStatus('✨ AI combined your custom meal!', 'success');
-      if (navigator.vibrate) navigator.vibrate(40);
       currentProduct = {
         name: total.names.join(' + '),
         brand: "AI Custom Combo",
@@ -591,22 +560,13 @@
       displayResultCard();
       setTimeout(hideStatus, 2000);
     } else {
-      showStatus("I don't recognize those ingredients. Try '2 eggs and a little honey'.", "error");
+      showStatus("I don't recognize those ingredients yet. Try keeping it simple like '2 eggs and a little honey'.", "error");
       setTimeout(hideStatus, 4000);
     }
   }
 
   document.getElementById('ai-input').addEventListener('keydown', e => { if (e.key === 'Enter') parseAIFood(); });
   function logAIItem(itemName) { document.getElementById('ai-input').value = itemName; parseAIFood(); }
-
-  // LRU Cache Manager
-  function enforceCacheLimit() {
-    const keys = Object.keys(productCache);
-    if (keys.length > 50) {
-       delete productCache[keys[0]]; // Drops the oldest inserted key
-       safeSet('nutriscan-cache', JSON.stringify(productCache));
-    }
-  }
 
   async function lookupBarcode(code) {
     document.getElementById('result-card').classList.remove('active');
@@ -642,8 +602,7 @@
       };
 
       productCache[code] = currentProduct;
-      enforceCacheLimit();
-      safeSet('nutriscan-cache', JSON.stringify(productCache));
+      saveCache(productCache);
       renderRecentScans();
       displayResultCard();
       hideStatus();
@@ -663,7 +622,10 @@
     document.getElementById('result-card').classList.add('active');
   }
 
-  function lookupManual() { const code = document.getElementById('barcode-input').value.trim(); if (code) lookupBarcode(code); }
+  function lookupManual() {
+    const code = document.getElementById('barcode-input').value.trim();
+    if (code) lookupBarcode(code);
+  }
   document.getElementById('barcode-input').addEventListener('keydown', e => { if (e.key === 'Enter') lookupManual(); });
 
   function addToLog() {
@@ -678,4 +640,177 @@
     };
 
     log.push(loggedItem);
-    safeSet('nutriscan-log', JSON.stringify(log));
+    localStorage.setItem('nutriscan-log', JSON.stringify(log));
+    
+    if(navigator.vibrate) navigator.vibrate([30, 50, 30]); // Haptic click
+    renderLog(); updateUI();
+
+    const btn = document.querySelector('.add-btn');
+    btn.innerHTML = '✓ Added!'; btn.style.background = 'var(--gold)'; btn.style.color = '#000'; btn.style.borderColor = 'var(--gold)';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to today\'s log';
+      btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = '';
+      document.getElementById('result-card').classList.remove('active');
+      document.getElementById('barcode-input').value = '';
+      document.getElementById('ai-input').value = '';
+    }, 1200);
+  }
+
+  function removeFromLog(id) {
+    log = log.filter(item => item.id !== id);
+    localStorage.setItem('nutriscan-log', JSON.stringify(log));
+    goldVibrated = false; 
+    renderLog(); updateUI();
+  }
+
+  function resetDay() {
+    if (goals && log.length > 0) {
+      const pct = (log.reduce((acc, item) => acc + item.cal, 0)) / goals.cal;
+      if (pct >= 0.90 && pct <= 1.05) streak += 1;
+      localStorage.setItem('nutriscan-streak', streak);
+    }
+    log = []; waterCount = 0; goldVibrated = false;
+    localStorage.setItem('nutriscan-log', JSON.stringify(log));
+    localStorage.setItem('nutriscan-water', '0');
+    localStorage.setItem('nutriscan-date', new Date().toDateString());
+    renderWater(); renderLog(); updateUI();
+  }
+
+  function renderLog() {
+    const list = document.getElementById('log-list');
+    if (log.length === 0) return list.innerHTML = '<div class="empty-log">No foods logged yet. Scan an item or describe your meal!</div>';
+    
+    list.innerHTML = log.map(item => `
+      <div class="log-item">
+        <div class="log-name">${item.name} ${item.score !== 'unknown' ? `<span class="nutri-score ns-${item.score}" style="font-size:0.55rem; width:16px; height:16px; margin-left: 6px;">${item.score}</span>` : ''}</div>
+        <div class="log-macros">
+          <span class="log-macro cal">${item.cal}</span><span class="log-macro protein" style="opacity:0.6">${item.protein}P</span><span class="log-macro carbs" style="opacity:0.6">${item.carbs}C</span>
+        </div>
+        <button class="log-delete" onclick="removeFromLog(${item.id})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+    `).join('');
+  }
+
+  // Decoupled Data Processing and UI Rendering
+  function updateUI() {
+    const totals = log.reduce((acc, item) => ({ cal: acc.cal + item.cal, protein: acc.protein + item.protein, carbs: acc.carbs + item.carbs, fat: acc.fat + item.fat }), { cal: 0, protein: 0, carbs: 0, fat: 0 });
+
+    const elCal = document.getElementById('total-cal'), elPro = document.getElementById('total-protein'), elCarb = document.getElementById('total-carbs'), elFat = document.getElementById('total-fat');
+    
+    elCal.textContent = Math.round(totals.cal); elPro.textContent = totals.protein.toFixed(1) + 'g'; elCarb.textContent = totals.carbs.toFixed(1) + 'g'; elFat.textContent = totals.fat.toFixed(1) + 'g';
+    
+    // Macro Ratio logic
+    const totalMacros = totals.protein + totals.carbs + totals.fat;
+    if (totalMacros > 0) {
+      const pPct = Math.round((totals.protein / totalMacros) * 100);
+      const cPct = Math.round((totals.carbs / totalMacros) * 100);
+      const fPct = Math.round((totals.fat / totalMacros) * 100);
+      document.getElementById('macro-split-text').textContent = `${cPct}% Carbs · ${pPct}% Protein · ${fPct}% Fat`;
+    } else {
+      document.getElementById('macro-split-text').textContent = "0% Carbs · 0% Protein · 0% Fat";
+    }
+
+    const aiBox = document.getElementById('ai-tip'), aiText = document.getElementById('ai-tip-text');
+
+    if (goals) {
+      aiBox.style.display = 'flex'; document.getElementById('health-dash').style.display = 'flex';
+      
+      document.getElementById('cal-target-text').textContent = `Goal: ${goals.cal} kcal`;
+      const pCal = (totals.cal / goals.cal) * 100;
+      
+      // Overflow handling logic for UI (Caps visual width at 100% but turns red)
+      document.getElementById('pb-cal').style.width = Math.min(pCal, 100) + '%';
+      document.getElementById('pb-cal').className = 'progress-bar' + (pCal >= 90 && pCal <= 105 ? ' gold' : pCal > 105 ? ' red' : '');
+      elCal.className = 'total-value' + (pCal >= 90 && pCal <= 105 ? ' gold' : pCal > 105 ? ' red' : '');
+
+      const pPro = (totals.protein / goals.protein) * 100;
+      const pCarb = (totals.carbs / goals.carbs) * 100;
+      const pFat = (totals.fat / goals.fat) * 100;
+
+      document.getElementById('pb-pro').style.width = Math.min(pPro, 100) + '%';
+      document.getElementById('pb-pro').className = 'progress-bar' + (pPro > 100 ? ' red' : '');
+      document.getElementById('pb-carb').style.width = Math.min(pCarb, 100) + '%';
+      document.getElementById('pb-carb').className = 'progress-bar' + (pCarb > 100 ? ' red' : '');
+      document.getElementById('pb-fat').style.width = Math.min(pFat, 100) + '%';
+      document.getElementById('pb-fat').className = 'progress-bar' + (pFat > 100 ? ' red' : '');
+
+      document.getElementById('goal-cal-txt').textContent = `/ ${goals.cal}`; document.getElementById('goal-pro-txt').textContent = `/ ${goals.protein}g`; document.getElementById('goal-carb-txt').textContent = `/ ${goals.carbs}g`; document.getElementById('goal-fat-txt').textContent = `/ ${goals.fat}g`;
+
+      document.getElementById('j-start').textContent = `${goals.startWeight}kg`; document.getElementById('j-end').textContent = `${goals.targetWeight}kg`; document.getElementById('streak-count').textContent = `${streak} Days`;
+      document.getElementById('journey-dot').style.left = Math.min((streak * 3.5), 95) + '%';
+
+      const lastFood = log[log.length - 1];
+      
+      if (pCal > 105) {
+        aiText.innerHTML = `<strong>Over Limit.</strong> You are ${Math.round(totals.cal - goals.cal)} kcal over. Hydrate and focus on tomorrow!`;
+      } else if (pCal >= 90) {
+        aiText.innerHTML = "🏆 <strong>Gold Zone!</strong> You've hit the sweet spot. Stop here to stay on track for your goal.";
+        if (navigator.vibrate && !goldVibrated) { navigator.vibrate([100, 50, 100]); goldVibrated = true; }
+      } else if (pCal > 50 && waterCount < 3) {
+        aiText.innerHTML = `💡 You've eaten over half your calories, but only had ${waterCount} glasses of water. Drink up to prevent false hunger!`;
+        goldVibrated = false;
+      } else if (lastFood && (lastFood.score === 'd' || lastFood.score === 'e')) {
+        aiText.innerHTML = `You logged a <strong>Grade ${lastFood.score.toUpperCase()}</strong> item. Try to balance your next meal with a Grade A whole food!`;
+        goldVibrated = false;
+      } else {
+        const remaining = goals.cal - totals.cal;
+        let etaText = goals.eta > 0 ? `<br><span style="display:block; margin-top:4px; opacity:0.8; font-size:0.75rem;">ETA to ${goals.targetWeight}kg: <strong>${goals.eta} weeks</strong></span>` : '';
+        aiText.innerHTML = `You have <strong>${Math.round(remaining)} kcal</strong> remaining today to hit the Gold Zone.${etaText}`;
+        goldVibrated = false;
+      }
+    }
+  }
+
+  // Precision Scanner Engine
+  function startScanner() {
+    const container = document.getElementById('scanner-container');
+    container.classList.add('active'); scannerActive = true; scanVotes = {}; torchActive = false;
+    
+    Quagga.init({ 
+      inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#interactive'), constraints: { facingMode: "environment" } }, 
+      decoder: { readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader"] },
+    }, err => { 
+      if (err) { showStatus('Camera unavailable. Use manual entry.', 'error'); stopScanner(); return; } 
+      Quagga.start(); 
+    });
+
+    Quagga.onDetected(result => {
+      const code = result.codeResult.code;
+      const frame = document.getElementById('scan-frame');
+      
+      // Heartbeat / Pulse UI
+      frame.classList.add('pulse');
+      setTimeout(() => frame.classList.remove('pulse'), 150);
+
+      scanVotes[code] = (scanVotes[code] || 0) + 1;
+      
+      // 3-Match Confidence Trigger
+      if (scanVotes[code] >= 3) {
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50]); 
+        stopScanner();
+        document.getElementById('barcode-input').value = code; lookupBarcode(code);
+      }
+    });
+  }
+
+  function toggleTorch() {
+    torchActive = !torchActive;
+    const track = Quagga.CameraAccess.getActiveTrack();
+    if (track && typeof track.applyConstraints === 'function') {
+      track.applyConstraints({ advanced: [{ torch: torchActive }] }).catch(e => console.log("Torch not supported"));
+    }
+  }
+
+  function stopScanner() { 
+    if (!scannerActive) return; 
+    scannerActive = false; torchActive = false;
+    Quagga.stop(); 
+    document.getElementById('scanner-container').classList.remove('active'); 
+  }
+
+  // Init Boot
+  renderWater(); renderLog(); updateUI(); renderRecentScans();
+</script>
+
+</body>
+</html>
